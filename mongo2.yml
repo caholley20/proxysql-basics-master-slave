@@ -1,0 +1,59 @@
+---
+- hosts: all
+  become: True
+  tasks:
+     - name: Create repo file
+       copy: 
+         src: /templates/mongodb-org-4.0.repo
+         dest: /etc/yum.repos.d/mongodb-org-4.0.repo
+         owner: root
+         group: root 
+
+     - name Install mongo repo
+       yum:
+        name: 
+          - mongodb-org-4.0.14
+          - mongodb-org-server-4.0.14
+          - mongodb-org-shell-4.0.14 
+          - mongodb-org-mongos-4.0.14 
+          - mongodb-org-tools-4.0.14    
+        state: present
+
+     - name:  Create directories for Mongodb 
+       file:  
+         path: /data/mongodb/
+         state: directory
+         node:  0755
+         group: mongod
+         owner: mongod
+       become: yes 
+       become_user: sudo
+
+     - name: Create remaining directories Mongodb
+       file:
+         path: "/data/mongodb/{{item}}"
+         owner: mongod
+         group: mongod
+         mode: 0755
+         recurse: yes
+         state:  directory
+       with_items: ["conf","dbdata","scripts","tmp"]
+     
+     - name: Copy Mongod Conf file 
+       copy:
+         src: /templates/mongod.conf
+         dest: /data/mongodb/conf/mongod.conf
+         owner: mongod
+         group: mongod
+         mode:  0600
+
+     - name: Copy Mongod kefile 
+       copy:
+         src: /templates/mongokey
+         dest: /data/mongodb/conf/mongokey
+         owner: mongod
+         group: mongod
+         mode:  0600
+   
+
+ 
